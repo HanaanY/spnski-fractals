@@ -1,109 +1,87 @@
-#define BRD_W 27
-#define BRD_H 27
+#include <stdio.h>
+#include <stdlib.h>
+#include "neillsdl2.h"
 #define LIMIT 9
 #define LIMITSIDE 3
 #define MIDDLE 5
-#define GRIDSIZE BRD_H * BRD_W
-#define ON '.'
-#define OFF ' '
+#define MILLISECONDDELAY 5
+#define GRIDSIZE WWIDTH * WHEIGHT
+#define RED 255
+#define GREEN 0
+#define BLUE 0
 
-#include <stdio.h>
-#include <stdlib.h>
+typedef SDL_Rect Square;
 
-typedef struct square{
-   int x1, x2, y1, y2;
-} Square;
-
-
-void init_vertices(Square *sq0);
-void deleteSquare(char board[][BRD_W], Square *sq0);
-void resetBoard(char board[][BRD_W]);
-int  sCarpet(char board[][BRD_W], Square *sq0);
-void printBoard(char board[][BRD_W]);
-void drawSquare(char board[][BRD_W], Square *sq0, Square *sq1);
-
+void init(Square *sq0);
+int  sCarpet(SDL_Simplewin *sw, Square *sq0);
+void drawSquare(SDL_Simplewin *sw, Square *x);
+void clearSquare(SDL_Simplewin *sw, Square *x);
 
 int main(void){
-   char board[BRD_H][BRD_W];
+   SDL_Simplewin sw;
    Square sq0;
 
-   init_vertices(&sq0);
-   printBoard(board);
-   drawSquare(board, &sq0, &sq0);
-   sCarpet(board, &sq0);
+   init(&sq0);
+   Neill_SDL_Init(&sw);
+   drawSquare(&sw, &sq0);
+   sCarpet(&sw, &sq0);
 
    return 0;
 }
 
-void init_vertices(Square *sq0){
-   sq0->x1 = 0;
-   sq0->x2 = BRD_W;
-   sq0->y1 = 0;
-   sq0->y2 = BRD_H;
+void init(Square *sq0){
+   sq0->x = 0;
+   sq0->y = 0;
+   sq0->w = WWIDTH;
+   sq0->h = WHEIGHT;
 }
 
-void drawSquare(char board[][BRD_W], Square *sq0, Square *sq1){
-   int i, j;
-   for(i = sq0->y1; i < sq0->y2; i++){
-      for(j = sq0->x1; j < sq0->x2; j++){
-         board[i][j] = OFF;
-      }
-   }
-   for(i = sq1->y1; i < sq1->y2; i++){
-         for(j = sq1->x1; j < sq1->x2; j++){
-         board[i][j] = ON;
-      }
-   }
-
+void drawSquare(SDL_Simplewin *sw, Square *x){
+   Neill_SDL_SetDrawColour(sw, RED, GREEN, BLUE);
+   SDL_RenderFillRect(sw->renderer, x);
+   SDL_RenderPresent(sw->renderer);
+   SDL_UpdateWindowSurface(sw->win);
 }
 
-void deleteSquare(char board[][BRD_W], Square *sq0){
-   int i, j;
-   for(i = sq0->y1; i < sq0->y2; i++){
-      for(j = sq0->x1; j < sq0->x2; j++){
-         board[i][j] = OFF;
-      }
-   }
+void deleteSquare(SDL_Simplewin *sw, Square *x){
+   Neill_SDL_SetDrawColour(sw, 0, 0, 0);
+   SDL_RenderFillRect(sw->renderer, x);
+   SDL_RenderPresent(sw->renderer);
+   SDL_UpdateWindowSurface(sw->win);
 }
 
-int sCarpet(char board[][BRD_W], Square *sq0){
+int sCarpet(SDL_Simplewin *sw, Square *sq0){
    Square a[LIMIT];
-   int i, j, size, index = 0;
-   size = sq0->x2 - sq0->x1;
+   int i, j, new_w, new_h, index = 0;
 
    /* base case*/
-   if(size < LIMIT){
+   if(sq0->w < LIMIT){
       return 1;
    }
+
+   /* make new squares 1/3 of the size */
+   new_w = sq0->w / 3;
+   new_h = sq0->h / 3;
 
    /* Split squares into 9 */
    for(i = 0; i < LIMITSIDE; i++){
       for(j = 0; j < LIMITSIDE; j++, index = 3 * i + j){
-         a[index].x1 = sq0->x1 + j * size/3;
-         a[index].x2 = sq0->x1 + (j + 1) * size/3;
-         a[index].y1 = sq0->y1 + i * size/3;
-         a[index].y2 = sq0->y1 + (i + 1) * size/3;
+         a[index].x = sq0->x + j * sq0->w /3;
+         a[index].w = new_w;
+         a[index].y = sq0->y + i * sq0->h /3;
+         a[index].h = new_h;
       }
    }
-
-   deleteSquare(board, &(a[MIDDLE - 1]));
-   printBoard(board);
-
+   Neill_SDL_Events(sw);
+   deleteSquare(sw, &(a[MIDDLE - 1]));
+   SDL_Delay(MILLISECONDDELAY);
+   if(sw->finished){
+     exit(EXIT_SUCCESS);
+     /* Clear up graphics subsystem */
+     atexit(SDL_Quit);
+   }
    for(i = 0; i < LIMIT; i++){
-      sCarpet(board, &(a[i]));
+      sCarpet(sw, &(a[i]));
    }
    return 0;
-}
-
-
-void printBoard(char board[][BRD_W]){
-   int i, j;
-   printf("\n");
-   for(i = 0; i < BRD_H; i++){
-      for(j = 0; j < BRD_W; j++){
-         printf("%c", board[i][j]);
-      }
-   printf("\n");
-   }
-   printf("\n");
 }

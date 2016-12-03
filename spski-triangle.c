@@ -4,8 +4,6 @@
 
 #define LIMIT 8
 #define GRIDSIZE WWIDTH * WHEIGHT
-#define ON '.'
-#define OFF ' '
 #define MILLISECONDDELAY 5
 #define RED 255
 #define GREEN 0
@@ -16,12 +14,8 @@ typedef SDL_Rect Square;
 
 void init(Square *sq0);
 void drawSquare(SDL_Simplewin *sw, Square *sq1);
-void resetBoard(SDL_Simplewin *sw);
 int  sTriangle(SDL_Simplewin *sw, Square *sq0);
-void printBoard(SDL_Simplewin *sw);
 void clearSquare(SDL_Simplewin *sw, Square *x);
-
-
 
 int main(void){
    SDL_Simplewin sw;
@@ -31,6 +25,7 @@ int main(void){
    Neill_SDL_Init(&sw);
    drawSquare(&sw, &sq0);
    sTriangle(&sw, &sq0);
+
    return 0;
 }
 
@@ -42,17 +37,17 @@ void init(Square *sq0){
 }
 
 void drawSquare(SDL_Simplewin *sw, Square *x){
-  Neill_SDL_SetDrawColour(sw, RED, GREEN, BLUE);
-  SDL_RenderFillRect(sw->renderer, x);
-  SDL_RenderPresent(sw->renderer);
-  SDL_UpdateWindowSurface(sw->win);
+   Neill_SDL_SetDrawColour(sw, RED, GREEN, BLUE);
+   SDL_RenderFillRect(sw->renderer, x);
+   SDL_RenderPresent(sw->renderer);
+   SDL_UpdateWindowSurface(sw->win);
 }
 
 void clearSquare(SDL_Simplewin *sw, Square *x){
-  Neill_SDL_SetDrawColour(sw, 0, 0, 0);
-  SDL_RenderFillRect(sw->renderer, x);
-  SDL_RenderPresent(sw->renderer);
-  SDL_UpdateWindowSurface(sw->win);
+   Neill_SDL_SetDrawColour(sw, 0, 0, 0);
+   SDL_RenderFillRect(sw->renderer, x);
+   SDL_RenderPresent(sw->renderer);
+   SDL_UpdateWindowSurface(sw->win);
 }
 
 int sTriangle(SDL_Simplewin *sw, Square *sq0){
