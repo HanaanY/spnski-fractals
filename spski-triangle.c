@@ -1,131 +1,108 @@
-#define BRD_W 64
-#define BRD_H 64
+#include <stdio.h>
+#include <stdlib.h>
+#include "neillsdl2.h"
+
 #define LIMIT 8
-#define GRIDSIZE BRD_H * BRD_W
+#define GRIDSIZE WWIDTH * WHEIGHT
 #define ON '.'
 #define OFF ' '
-#define MILLISECONDDELAY
+#define MILLISECONDDELAY 5
 #define RED 255
 #define GREEN 0
 #define BLUE 0
 
 
+typedef SDL_Rect Square;
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "neillsdl2.h"
+void init(Square *sq0);
+void drawSquare(SDL_Simplewin *sw, Square *sq1);
+void resetBoard(SDL_Simplewin *sw);
+int  sTriangle(SDL_Simplewin *sw, Square *sq0);
+void printBoard(SDL_Simplewin *sw);
+void clearSquare(SDL_Simplewin *sw, Square *x);
 
-typedef struct square{
-   int x1, x2, y1, y2;
-} Square;
-
-void init_vertices(Square *sq0);
-void drawSquare(char board[][BRD_W], Square *sq0, Square *sq1);
-void resetBoard(char board[][BRD_W]);
-int  sTriangle(char board[][BRD_W], Square *sq0);
-void printBoard(char board[][BRD_W]);
-void setupColour(SDL_Simplewin *sw);
 
 
 int main(void){
-   char board[BRD_H][BRD_W];
-   Square sq0;
    SDL_Simplewin sw;
+   Square sq0;
 
-   init_vertices(&sq0);
+   init(&sq0);
    Neill_SDL_Init(&sw);
-
-   resetBoard(board);
-   drawSquare(board, &sq0, &sq0);
-   sTriangle(board, &sq0);
-   printBoard(board);
-
+   drawSquare(&sw, &sq0);
+   sTriangle(&sw, &sq0);
    return 0;
 }
 
-void init_vertices(Square *sq0){
-   sq0->x1 = 0;
-   sq0->x2 = BRD_W;
-   sq0->y1 = 0;
-   sq0->y2 = BRD_H;
+void init(Square *sq0){
+   sq0->x = 0;
+   sq0->y = 0;
+   sq0->w = WWIDTH;
+   sq0->h = WHEIGHT;
 }
 
-void setupColour(SDL_Simplewin *sw){
+void drawSquare(SDL_Simplewin *sw, Square *x){
   Neill_SDL_SetDrawColour(sw, RED, GREEN, BLUE);
+  SDL_RenderFillRect(sw->renderer, x);
+  SDL_RenderPresent(sw->renderer);
+  SDL_UpdateWindowSurface(sw->win);
 }
 
-
-void drawSquare(char board[][BRD_W], Square *sq0, Square *sq1){
-   int i, j;
-   for(i = sq0->y1; i < sq0->y2; i++){
-      for(j = sq0->x1; j < sq0->x2; j++){
-         board[i][j] = OFF;
-      }
-   }
-   for(i = sq1->y1; i < sq1->y2; i++){
-      for(j = sq1->x1; j < sq1->x2; j++){
-         board[i][j] = ON;
-      }
-   }
-
+void clearSquare(SDL_Simplewin *sw, Square *x){
+  Neill_SDL_SetDrawColour(sw, 0, 0, 0);
+  SDL_RenderFillRect(sw->renderer, x);
+  SDL_RenderPresent(sw->renderer);
+  SDL_UpdateWindowSurface(sw->win);
 }
 
-void resetBoard(char board[][BRD_W]){
-   int i, j;
-   for(i = 0; i < BRD_H; i++){
-      for(j = 0; j < BRD_W; j++){
-         board[i][j] = OFF;
-      }
-   }
-}
-
-int sTriangle(char board[][BRD_W], Square *sq0){
-   int midx, midy, oqx, tqx;
+int sTriangle(SDL_Simplewin *sw, Square *sq0){
+   int midx, midy, oqx, new_w, new_h;
    Square sq1, sq2, sq3;
    /* base case*/
-   if(sq0->x2 - sq0->x1 < LIMIT){
+   if(sq0->w < LIMIT){
       return 1;
    }
+   /* make new squares half the size */
+   new_w = sq0->w / 2;
+   new_h = sq0->h / 2;
 
    /* Find midpoints */
-   midx = sq0->x1 + (sq0->x2 - sq0->x1) / 2;
-   midy = sq0->y1 + (sq0->y2 - sq0->y1) / 2;
-   oqx = sq0->x1 + (sq0->x2 - sq0->x1) / 4;
-   tqx =  midx + (sq0->x2 - sq0->x1) / 4;
+   midx = sq0->x + sq0->w / 2;
+   midy = sq0->y + sq0->h / 2;
+   oqx = sq0->x + sq0->w / 4;
    /* Set up three new squares if possible */
-   sq1.x1 = oqx;
-   sq1.x2 = tqx;
-   sq1.y1 = sq0->y1;
-   sq1.y2 = midy;
+   sq1.x = oqx;
+   sq1.w = new_w;
+   sq1.y = sq0->y;
+   sq1.h = new_h;
    /* Now sq2 */
-   sq2.x1 = sq0->x1;
-   sq2.x2 = midx;
-   sq2.y1 = midy;
-   sq2.y2 = sq0->y2;
+   sq2.x = sq0->x;
+   sq2.w = new_w;
+   sq2.y = midy;
+   sq2.h = new_h;
    /* Now sq3 */
-   sq3.x1 = midx;
-   sq3.x2 = sq0->x2;
-   sq3.y1 = midy;
-   sq3.y2 = sq0->y2;
+   sq3.x = midx;
+   sq3.w = new_w;
+   sq3.y = midy;
+   sq3.h = new_h;
 
-   drawSquare(board, sq0, &sq1);
-   drawSquare(board, &sq2, &sq2);
-   drawSquare(board, &sq3, &sq3);
-   sTriangle(board, &sq1);
-   sTriangle(board, &sq2);
-   sTriangle(board, &sq3);
-   return 0;
-}
-
-
-void printBoard(char board[][BRD_W]){
-   int i, j;
-   printf("\n");
-   for(i = 0; i < BRD_H; i++){
-      for(j = 0; j < BRD_W; j++){
-         printf("%c", board[i][j]);
-      }
-   printf("\n");
+   Neill_SDL_Events(sw);
+   clearSquare(sw, sq0);
+   SDL_Delay(MILLISECONDDELAY);
+   drawSquare(sw, &sq1);
+   SDL_Delay(MILLISECONDDELAY);
+   drawSquare(sw, &sq2);
+   SDL_Delay(MILLISECONDDELAY);
+   drawSquare(sw, &sq3);
+   SDL_Delay(MILLISECONDDELAY);
+   if(sw->finished){
+     exit(EXIT_SUCCESS);
+     /* Clear up graphics subsystem */
+     atexit(SDL_Quit);
    }
-   printf("\n");
+   sTriangle(sw, &sq1);
+   sTriangle(sw, &sq2);
+   sTriangle(sw, &sq3);
+
+   return 0;
 }
